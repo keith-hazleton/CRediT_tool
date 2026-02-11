@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRediT Author Contributions Tool</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>CRediT Author Contributions Tool</h1>
+    <p class="subtitle">Collect CRediT (Contributor Roles Taxonomy) contributions from co-authors</p>
+  </header>
+
+  <main>
+    <!-- Landing / Create Project -->
+    <section id="landing-section">
+      <div class="card">
+        <h2>Start a New Project</h2>
+        <p>Create a project, then share the link with your co-authors so each person can enter their own contributions.</p>
+        <label for="project-title-input">Manuscript title (optional)</label>
+        <input type="text" id="project-title-input" placeholder="e.g. Our Manuscript Title">
+        <button id="create-project-btn" class="btn-primary">Create New Project</button>
+      </div>
+    </section>
+
+    <!-- Project View -->
+    <section id="project-section" class="hidden">
+      <!-- Project Header -->
+      <div class="card project-header-card">
+        <h2 id="project-title">Untitled Project</h2>
+        <div class="share-link-row">
+          <label>Shareable link:</label>
+          <input type="text" id="share-link" readonly>
+          <button id="copy-link-btn" class="btn-small" title="Copy link">Copy</button>
+        </div>
+      </div>
+
+      <!-- Authors List -->
+      <div class="card">
+        <h3>Authors</h3>
+        <div id="authors-list">
+          <p class="placeholder-text">No authors yet. Click "+ Add Myself" to get started.</p>
+        </div>
+        <button id="add-author-btn" class="btn-primary">+ Add Myself</button>
+      </div>
+
+      <!-- Output -->
+      <div class="card">
+        <h3>Generated Output</h3>
+
+        <div class="output-block">
+          <div class="output-header">
+            <span>Author List with Affiliations</span>
+            <button class="btn-small copy-output-btn" data-target="author-list-output">Copy</button>
+          </div>
+          <pre id="author-list-output" class="output-text"></pre>
+        </div>
+
+        <div class="output-block">
+          <div class="output-header">
+            <span>CRediT Author Statement</span>
+            <div>
+              <button class="btn-small copy-output-btn" data-target="credit-statement-output">Copy</button>
+              <button class="btn-small copy-rich-btn" id="copy-rich-credit-btn" title="Copy with bold author names (rich text)">Copy Rich</button>
+            </div>
+          </div>
+          <pre id="credit-statement-output" class="output-text"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add/Edit Author Modal -->
+  <div id="author-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 id="modal-title">Add Author</h3>
+
+      <label>Name <span class="required">*</span></label>
+      <div class="name-fields">
+        <div>
+          <input type="text" id="author-first-name" placeholder="First name">
+        </div>
+        <div class="name-mi">
+          <input type="text" id="author-middle-initial" placeholder="M.I." maxlength="3">
+        </div>
+        <div>
+          <input type="text" id="author-last-name" placeholder="Last name">
+        </div>
+      </div>
+
+      <label>Affiliations</label>
+      <div id="affiliations-container"></div>
+      <button id="add-affiliation-btn" class="btn-link">+ Add affiliation</button>
+
+      <label>CRediT Roles <span class="required">*</span></label>
+      <div id="roles-grid" class="roles-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="modal-actions">
+        <button id="modal-save-btn" class="btn-primary">Save</button>
+        <button id="modal-cancel-btn" class="btn-secondary">Cancel</button>
+        <button id="modal-delete-btn" class="btn-danger hidden">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>CRediT roles defined by <a href="https://credit.niso.org/" target="_blank" rel="noopener">NISO Z39.104-2022</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

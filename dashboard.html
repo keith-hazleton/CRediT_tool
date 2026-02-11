@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRediT Tool - Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .project-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .project-table th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      border-bottom: 2px solid #ddd;
+      font-size: 0.8rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .project-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid #eee;
+    }
+    .project-table tr:hover td {
+      background: #f0f7ff;
+    }
+    .project-table a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .project-table a:hover {
+      text-decoration: underline;
+    }
+    .project-count {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CRediT Tool - Dashboard</h1>
+    <p class="subtitle">All manuscripts</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Projects</h2>
+      <p class="project-count" id="project-count"></p>
+      <table class="project-table">
+        <thead>
+          <tr>
+            <th>Manuscript Title</th>
+            <th>Authors</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="project-list"></tbody>
+      </table>
+      <p class="placeholder-text hidden" id="no-projects">No projects yet.</p>
+    </div>
+  </main>
+
+  <script>
+    async function loadProjects() {
+      const tbody = document.getElementById("project-list");
+      const countEl = document.getElementById("project-count");
+      const noProjects = document.getElementById("no-projects");
+
+      try {
+        const res = await fetch("/api/projects-list");
+        const projects = await res.json();
+
+        if (projects.length === 0) {
+          noProjects.classList.remove("hidden");
+          countEl.textContent = "";
+          return;
+        }
+
+        countEl.textContent = projects.length + " project" + (projects.length === 1 ? "" : "s");
+
+        projects.forEach((p) => {
+          const tr = document.createElement("tr");
+
+          const titleTd = document.createElement("td");
+          const link = document.createElement("a");
+          link.href = "/?project=" + p.id;
+          link.textContent = p.title || "Untitled Project";
+          titleTd.appendChild(link);
+
+          const authorsTd = document.createElement("td");
+          authorsTd.textContent = p.author_count;
+
+          const dateTd = document.createElement("td");
+          dateTd.textContent = p.created_at ? new Date(p.created_at + "Z").toLocaleDateString() : "—";
+
+          tr.appendChild(titleTd);
+          tr.appendChild(authorsTd);
+          tr.appendChild(dateTd);
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Failed to load projects:", err);
+        noProjects.textContent = "Failed to load projects.";
+        noProjects.classList.remove("hidden");
+      }
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>
