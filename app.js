@@ -58,6 +58,7 @@ const modalTitle = document.getElementById("modal-title");
 const firstNameInput = document.getElementById("author-first-name");
 const middleInitialInput = document.getElementById("author-middle-initial");
 const lastNameInput = document.getElementById("author-last-name");
+const orcidInput = document.getElementById("author-orcid");
 const affiliationsContainer = document.getElementById("affiliations-container");
 const addAffiliationBtn = document.getElementById("add-affiliation-btn");
 const copyAffiliationBtn = document.getElementById("copy-affiliation-btn");
@@ -280,6 +281,12 @@ function renderAuthors() {
     rolesEl.innerHTML = "Roles: <span>" + escapeHtml(roles.join(", ")) + "</span>";
 
     infoDiv.appendChild(nameEl);
+    if (author.orcid) {
+      const orcidEl = document.createElement("div");
+      orcidEl.className = "author-orcid";
+      orcidEl.innerHTML = 'ORCiD: <a href="https://orcid.org/' + escapeHtml(author.orcid) + '" target="_blank" rel="noopener">' + escapeHtml(author.orcid) + '</a>';
+      infoDiv.appendChild(orcidEl);
+    }
     infoDiv.appendChild(affEl);
     infoDiv.appendChild(rolesEl);
 
@@ -340,6 +347,7 @@ function openModal(author = null) {
   firstNameInput.value = author ? author.firstName : "";
   middleInitialInput.value = author ? author.middleInitial : "";
   lastNameInput.value = author ? author.lastName : "";
+  orcidInput.value = author ? (author.orcid || "") : "";
 
   // Affiliations
   affiliationsContainer.innerHTML = "";
@@ -527,6 +535,7 @@ async function saveAuthor() {
   const firstName = firstNameInput.value.trim();
   const lastName = lastNameInput.value.trim();
   const middleInitial = middleInitialInput.value.trim();
+  const orcid = orcidInput.value.trim();
 
   if (!firstName || !lastName) {
     alert("Please enter a first and last name.");
@@ -558,7 +567,7 @@ async function saveAuthor() {
   modalSaveBtn.disabled = true;
   modalSaveBtn.textContent = "Saving...";
 
-  const payload = { firstName, lastName, middleInitial, affiliations, roles };
+  const payload = { firstName, lastName, middleInitial, affiliations, roles, orcid };
 
   try {
     if (editingAuthorId) {

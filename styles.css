@@ -266,6 +266,21 @@ main {
   margin-top: 0.15rem;
 }
 
+.author-card .author-orcid {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.15rem;
+}
+
+.author-card .author-orcid a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.author-card .author-orcid a:hover {
+  text-decoration: underline;
+}
+
 .author-card .author-roles {
   font-size: 0.8rem;
   color: #888;
@@ -387,6 +402,13 @@ main {
   outline: none;
   border-color: #3498db;
   box-shadow: 0 0 0 2px rgba(52,152,219,0.2);
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 0.2rem;
 }
 
 .required {

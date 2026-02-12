@@ -4,7 +4,7 @@
 export async function onRequestPut(context) {
   const { request, env, params } = context;
   const { authorId } = params;
-  const { firstName, lastName, middleInitial, affiliations, roles } = await request.json();
+  const { firstName, lastName, middleInitial, affiliations, roles, orcid } = await request.json();
 
   if (!firstName || !lastName || !roles || roles.length === 0) {
     return Response.json({ error: "First name, last name, and at least one role are required" }, { status: 400 });
@@ -13,7 +13,7 @@ export async function onRequestPut(context) {
   const name = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
 
   await env.DB.prepare(
-    "UPDATE authors SET name = ?, first_name = ?, last_name = ?, middle_initial = ?, affiliations = ?, roles = ? WHERE id = ?"
+    "UPDATE authors SET name = ?, first_name = ?, last_name = ?, middle_initial = ?, affiliations = ?, roles = ?, orcid = ? WHERE id = ?"
   ).bind(
     name,
     firstName,
@@ -21,12 +21,13 @@ export async function onRequestPut(context) {
     middleInitial || "",
     JSON.stringify(affiliations || []),
     JSON.stringify(roles),
+    orcid || "",
     authorId
   ).run();
 
   return Response.json({
     id: authorId, firstName, lastName, middleInitial: middleInitial || "",
-    affiliations: affiliations || [], roles
+    affiliations: affiliations || [], roles, orcid: orcid || ""
   });
 }
 
