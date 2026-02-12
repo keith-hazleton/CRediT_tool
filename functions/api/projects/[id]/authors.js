@@ -1,5 +1,6 @@
 // GET  /api/projects/:id/authors - List authors
 // POST /api/projects/:id/authors - Add an author
+import { normalizeAffiliations } from "../../../_countries.js";
 
 export async function onRequestGet(context) {
   const { env, params } = context;
@@ -51,7 +52,7 @@ export async function onRequestPost(context) {
     firstName,
     lastName,
     middleInitial || "",
-    JSON.stringify(affiliations || []),
+    JSON.stringify(normalizeAffiliations(affiliations || [])),
     JSON.stringify(roles),
     orcid || "",
     nextOrder
@@ -59,6 +60,6 @@ export async function onRequestPost(context) {
 
   return Response.json({
     id, firstName, lastName, middleInitial: middleInitial || "",
-    affiliations: affiliations || [], roles, orcid: orcid || "", author_order: nextOrder
+    affiliations: normalizeAffiliations(affiliations || []), roles, orcid: orcid || "", author_order: nextOrder
   }, { status: 201 });
 }

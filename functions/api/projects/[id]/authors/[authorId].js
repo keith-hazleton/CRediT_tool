@@ -1,5 +1,6 @@
 // PUT    /api/projects/:id/authors/:authorId - Update an author
 // DELETE /api/projects/:id/authors/:authorId - Delete an author
+import { normalizeAffiliations } from "../../../../_countries.js";
 
 export async function onRequestPut(context) {
   const { request, env, params } = context;
@@ -19,7 +20,7 @@ export async function onRequestPut(context) {
     firstName,
     lastName,
     middleInitial || "",
-    JSON.stringify(affiliations || []),
+    JSON.stringify(normalizeAffiliations(affiliations || [])),
     JSON.stringify(roles),
     orcid || "",
     authorId
@@ -27,7 +28,7 @@ export async function onRequestPut(context) {
 
   return Response.json({
     id: authorId, firstName, lastName, middleInitial: middleInitial || "",
-    affiliations: affiliations || [], roles, orcid: orcid || ""
+    affiliations: normalizeAffiliations(affiliations || []), roles, orcid: orcid || ""
   });
 }
 
