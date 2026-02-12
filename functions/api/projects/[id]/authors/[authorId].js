@@ -10,9 +10,12 @@ export async function onRequestPut(context) {
     return Response.json({ error: "First name, last name, and at least one role are required" }, { status: 400 });
   }
 
+  const name = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
+
   await env.DB.prepare(
-    "UPDATE authors SET first_name = ?, last_name = ?, middle_initial = ?, affiliations = ?, roles = ? WHERE id = ?"
+    "UPDATE authors SET name = ?, first_name = ?, last_name = ?, middle_initial = ?, affiliations = ?, roles = ? WHERE id = ?"
   ).bind(
+    name,
     firstName,
     lastName,
     middleInitial || "",

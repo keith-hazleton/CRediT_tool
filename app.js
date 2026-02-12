@@ -60,6 +60,7 @@ const middleInitialInput = document.getElementById("author-middle-initial");
 const lastNameInput = document.getElementById("author-last-name");
 const affiliationsContainer = document.getElementById("affiliations-container");
 const addAffiliationBtn = document.getElementById("add-affiliation-btn");
+const copyAffiliationBtn = document.getElementById("copy-affiliation-btn");
 const rolesGrid = document.getElementById("roles-grid");
 const modalSaveBtn = document.getElementById("modal-save-btn");
 const modalCancelBtn = document.getElementById("modal-cancel-btn");
@@ -113,6 +114,7 @@ function bindEvents() {
   copyLinkBtn.addEventListener("click", () => copyToClipboard(shareLinkInput.value, copyLinkBtn));
   addAuthorBtn.addEventListener("click", () => openModal());
   addAffiliationBtn.addEventListener("click", addAffiliationRow);
+  copyAffiliationBtn.addEventListener("click", showAffiliationPicker);
   modalSaveBtn.addEventListener("click", saveAuthor);
   modalCancelBtn.addEventListener("click", closeModal);
   modalDeleteBtn.addEventListener("click", deleteAuthor);
@@ -352,11 +354,17 @@ function openModal(author = null) {
     cb.checked = author ? (author.roles || []).includes(cb.value) : false;
   });
 
+  // Show "Copy from co-author" button only if other authors have affiliations
+  const existingAffs = getExistingAffiliations();
+  copyAffiliationBtn.classList.toggle("hidden", existingAffs.length === 0);
+
   authorModal.classList.remove("hidden");
   firstNameInput.focus();
 }
 
 function closeModal() {
+  const picker = document.querySelector(".affiliation-picker");
+  if (picker) picker.remove();
   authorModal.classList.add("hidden");
   editingAuthorId = null;
 }
@@ -450,6 +458,68 @@ function updateRemoveButtons() {
     const btn = group.querySelector(".remove-affiliation-btn");
     btn.style.visibility = groups.length <= 1 ? "hidden" : "visible";
   });
+}
+
+// ===== Copy from Co-author =====
+function getExistingAffiliations() {
+  const seen = new Set();
+  const result = [];
+  authors.forEach((author) => {
+    if (author.id === editingAuthorId) return;
+    (author.affiliations || []).forEach((aff) => {
+      const key = formatAffiliation(aff);
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        result.push(aff);
+      }
+    });
+  });
+  return result;
+}
+
+function showAffiliationPicker() {
+  // Remove any existing picker
+  const existing = document.querySelector(".affiliation-picker");
+  if (existing) {
+    existing.remove();
+    return; // toggle off
+  }
+
+  const affs = getExistingAffiliations();
+  const picker = document.createElement("div");
+  picker.className = "affiliation-picker";
+
+  if (affs.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "affiliation-picker-empty";
+    empty.textContent = "No co-author affiliations yet";
+    picker.appendChild(empty);
+  } else {
+    affs.forEach((aff) => {
+      const item = document.createElement("div");
+      item.className = "affiliation-picker-item";
+      item.textContent = formatAffiliation(aff);
+      item.addEventListener("click", () => {
+        addAffiliationGroupWithValue({ ...aff });
+        updateRemoveButtons();
+        picker.remove();
+      });
+      picker.appendChild(item);
+    });
+  }
+
+  // Insert picker after the affiliation-actions row
+  const actionsRow = copyAffiliationBtn.parentElement;
+  actionsRow.insertAdjacentElement("afterend", picker);
+
+  // Dismiss on outside click
+  function dismiss(e) {
+    if (!picker.contains(e.target) && e.target !== copyAffiliationBtn) {
+      picker.remove();
+      document.removeEventListener("mousedown", dismiss);
+    }
+  }
+  setTimeout(() => document.addEventListener("mousedown", dismiss), 0);
 }
 
 // ===== Save Author =====

@@ -39,11 +39,14 @@ export async function onRequestPost(context) {
   ).bind(projectId).first();
   const nextOrder = (maxRow.max_order ?? -1) + 1;
 
+  const name = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
+
   await env.DB.prepare(
-    "INSERT INTO authors (id, project_id, first_name, last_name, middle_initial, affiliations, roles, author_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO authors (id, project_id, name, first_name, last_name, middle_initial, affiliations, roles, author_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   ).bind(
     id,
     projectId,
+    name,
     firstName,
     lastName,
     middleInitial || "",
