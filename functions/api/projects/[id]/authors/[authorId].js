@@ -5,7 +5,9 @@ import { normalizeAffiliations } from "../../../../_countries.js";
 export async function onRequestPut(context) {
   const { request, env, params } = context;
   const { authorId } = params;
-  const { firstName, lastName, middleInitial, affiliations, roles, orcid } = await request.json();
+  const body = await request.json();
+  const { firstName, lastName, middleInitial, affiliations, roles, orcid } = body;
+  const equalContribution = ["first", "last"].includes(body.equalContribution) ? body.equalContribution : "";
 
   if (!firstName || !lastName || !roles || roles.length === 0) {
     return Response.json({ error: "First name, last name, and at least one role are required" }, { status: 400 });
@@ -14,7 +16,7 @@ export async function onRequestPut(context) {
   const name = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
 
   await env.DB.prepare(
-    "UPDATE authors SET name = ?, first_name = ?, last_name = ?, middle_initial = ?, affiliations = ?, roles = ?, orcid = ? WHERE id = ?"
+    "UPDATE authors SET name = ?, first_name = ?, last_name = ?, middle_initial = ?, affiliations = ?, roles = ?, orcid = ?, equal_contribution = ? WHERE id = ?"
   ).bind(
     name,
     firstName,
@@ -23,12 +25,13 @@ export async function onRequestPut(context) {
     JSON.stringify(normalizeAffiliations(affiliations || [])),
     JSON.stringify(roles),
     orcid || "",
+    equalContribution,
     authorId
   ).run();
 
   return Response.json({
     id: authorId, firstName, lastName, middleInitial: middleInitial || "",
-    affiliations: normalizeAffiliations(affiliations || []), roles, orcid: orcid || ""
+    affiliations: normalizeAffiliations(affiliations || []), roles, orcid: orcid || "", equalContribution
   });
 }
 

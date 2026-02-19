@@ -290,6 +290,20 @@ function renderAuthors() {
     infoDiv.appendChild(affEl);
     infoDiv.appendChild(rolesEl);
 
+    // Equal contribution dropdown
+    const eqDiv = document.createElement("div");
+    eqDiv.className = "author-equal-contribution";
+    const eqLabel = document.createElement("span");
+    eqLabel.textContent = "Equal contribution: ";
+    const eqSelect = document.createElement("select");
+    eqSelect.className = "equal-contribution-select";
+    eqSelect.innerHTML = '<option value="">None</option><option value="first">Co-first author</option><option value="last">Co-senior author</option>';
+    eqSelect.value = author.equalContribution || "";
+    eqSelect.addEventListener("change", () => updateEqualContribution(author, eqSelect.value));
+    eqDiv.appendChild(eqLabel);
+    eqDiv.appendChild(eqSelect);
+    infoDiv.appendChild(eqDiv);
+
     // Edit button
     const editBtn = document.createElement("button");
     editBtn.className = "edit-btn";
@@ -313,6 +327,27 @@ async function moveAuthor(authorId, direction) {
     await fetchAuthors();
   } catch (err) {
     console.error("Error reordering:", err);
+  }
+}
+
+// ===== Update Equal Contribution =====
+async function updateEqualContribution(author, value) {
+  try {
+    await api("/projects/" + currentProjectId + "/authors/" + author.id, {
+      method: "PUT",
+      body: JSON.stringify({
+        firstName: author.firstName,
+        lastName: author.lastName,
+        middleInitial: author.middleInitial,
+        affiliations: author.affiliations,
+        roles: author.roles,
+        orcid: author.orcid || "",
+        equalContribution: value
+      })
+    });
+    await fetchAuthors();
+  } catch (err) {
+    console.error("Error updating equal contribution:", err);
   }
 }
 
@@ -567,7 +602,14 @@ async function saveAuthor() {
   modalSaveBtn.disabled = true;
   modalSaveBtn.textContent = "Saving...";
 
-  const payload = { firstName, lastName, middleInitial, affiliations, roles, orcid };
+  // Preserve existing equalContribution when editing via modal
+  let equalContribution = "";
+  if (editingAuthorId) {
+    const existing = authors.find((a) => a.id === editingAuthorId);
+    if (existing) equalContribution = existing.equalContribution || "";
+  }
+
+  const payload = { firstName, lastName, middleInitial, affiliations, roles, orcid, equalContribution };
 
   try {
     if (editingAuthorId) {
@@ -638,13 +680,21 @@ function generateAuthorList() {
     });
   });
 
+  // Check which equal contribution types are present
+  const hasCoFirst = authors.some((a) => a.equalContribution === "first");
+  const hasCoSenior = authors.some((a) => a.equalContribution === "last");
+
   // Build author line
   const authorParts = authors.map((author) => {
     const displayName = formatDisplayName(author);
     const affs = (author.affiliations || []).map(formatAffiliation).filter((a) => a && affMap.has(a));
-    if (affs.length === 0) return displayName;
-    const superscripts = affs.map((a) => toSuperscript(affMap.get(a)));
-    return displayName + superscripts.join("\u00B7");
+    let suffix = "";
+    if (affs.length > 0) {
+      suffix += affs.map((a) => affMap.get(a)).sort((a, b) => a - b).map(toSuperscript).join("\u00B7");
+    }
+    if (author.equalContribution === "first") suffix += "*";
+    if (author.equalContribution === "last") suffix += "\u2020";
+    return displayName + suffix;
   });
 
   let output = authorParts.join(", ");
@@ -655,6 +705,13 @@ function generateAuthorList() {
     affMap.forEach((index, aff) => {
       output += "\n" + toSuperscript(index) + " " + aff;
     });
+  }
+
+  // Add equal contribution footnotes
+  if (hasCoFirst || hasCoSenior) {
+    output += "\n";
+    if (hasCoFirst) output += "\n* These authors contributed equally to this work.";
+    if (hasCoSenior) output += "\n\u2020 These authors contributed equally as senior authors.";
   }
 
   return output;

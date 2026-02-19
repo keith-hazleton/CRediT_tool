@@ -7,7 +7,7 @@ export async function onRequestGet(context) {
   const projectId = params.id;
 
   const { results } = await env.DB.prepare(
-    "SELECT id, first_name, last_name, middle_initial, affiliations, roles, orcid, author_order FROM authors WHERE project_id = ? ORDER BY author_order ASC"
+    "SELECT id, first_name, last_name, middle_initial, affiliations, roles, orcid, equal_contribution, author_order FROM authors WHERE project_id = ? ORDER BY author_order ASC"
   ).bind(projectId).all();
 
   const authors = results.map((row) => ({
@@ -18,6 +18,7 @@ export async function onRequestGet(context) {
     affiliations: JSON.parse(row.affiliations),
     roles: JSON.parse(row.roles),
     orcid: row.orcid,
+    equalContribution: row.equal_contribution || "",
     author_order: row.author_order
   }));
 
@@ -27,7 +28,9 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   const { request, env, params } = context;
   const projectId = params.id;
-  const { firstName, lastName, middleInitial, affiliations, roles, orcid } = await request.json();
+  const body = await request.json();
+  const { firstName, lastName, middleInitial, affiliations, roles, orcid } = body;
+  const equalContribution = ["first", "last"].includes(body.equalContribution) ? body.equalContribution : "";
 
   if (!firstName || !lastName || !roles || roles.length === 0) {
     return Response.json({ error: "First name, last name, and at least one role are required" }, { status: 400 });
@@ -44,7 +47,7 @@ export async function onRequestPost(context) {
   const name = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
 
   await env.DB.prepare(
-    "INSERT INTO authors (id, project_id, name, first_name, last_name, middle_initial, affiliations, roles, orcid, author_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO authors (id, project_id, name, first_name, last_name, middle_initial, affiliations, roles, orcid, equal_contribution, author_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   ).bind(
     id,
     projectId,
@@ -55,11 +58,12 @@ export async function onRequestPost(context) {
     JSON.stringify(normalizeAffiliations(affiliations || [])),
     JSON.stringify(roles),
     orcid || "",
+    equalContribution,
     nextOrder
   ).run();
 
   return Response.json({
     id, firstName, lastName, middleInitial: middleInitial || "",
-    affiliations: normalizeAffiliations(affiliations || []), roles, orcid: orcid || "", author_order: nextOrder
+    affiliations: normalizeAffiliations(affiliations || []), roles, orcid: orcid || "", equalContribution, author_order: nextOrder
   }, { status: 201 });
 }
